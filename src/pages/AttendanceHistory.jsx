@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import {
     getAttendanceRate,
@@ -34,6 +34,8 @@ export function AttendanceHistory() {
     const [allRecords, setAllRecords] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
     const [selectedId, setSelectedId] = useState(null);
+    const subjectListRef = useRef(null);
+    const detailRef = useRef(null);
 
     useEffect(() => {
         if (!studentId) return;
@@ -83,6 +85,19 @@ export function AttendanceHistory() {
         }
     }, [subjects, selectedId]);
 
+    function selectSubject(subjectId) {
+        setSelectedId(subjectId);
+
+        if (!window.matchMedia("(max-width: 640px)").matches) return;
+
+        requestAnimationFrame(() => {
+            const list = subjectListRef.current;
+            const active = list?.querySelector(".subject-list-item.active");
+            active?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+            detailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+    }
+
     const selected = subjects.find((item) => item.subjectId === selectedId);
     const showSlotColumn = (selected?.subjectIds?.length ?? 0) > 1;
     const monthLabel = formatMonthLabel(selectedMonth);
@@ -124,7 +139,7 @@ export function AttendanceHistory() {
                     <p className="empty-msg">{monthLabel}の出席記録はありません。</p>
                 ) : (
                     <div className="attendance-layout">
-                        <aside className="subject-list">
+                        <aside className="subject-list" ref={subjectListRef}>
                             {subjects.map((item) => (
                                 <button
                                     key={item.subjectId}
@@ -134,7 +149,7 @@ export function AttendanceHistory() {
                                             ? "subject-list-item active"
                                             : "subject-list-item"
                                     }
-                                    onClick={() => setSelectedId(item.subjectId)}
+                                    onClick={() => selectSubject(item.subjectId)}
                                 >
                                     <strong>{item.subjectName}</strong>
                                     <span>{item.rate}%</span>
@@ -143,7 +158,7 @@ export function AttendanceHistory() {
                         </aside>
 
                         {selected && (
-                            <div className="attendance-detail">
+                            <div className="attendance-detail" ref={detailRef}>
                                 <div className="attendance-detail-head">
                                     <div>
                                         <h3>{selected.subjectName}</h3>
@@ -166,7 +181,7 @@ export function AttendanceHistory() {
                                     <thead>
                                         <tr>
                                             <th>日付</th>
-                                            {showSlotColumn && <th>限</th>}
+                                            
                                             <th>ステータス</th>
                                         </tr>
                                     </thead>
@@ -174,9 +189,7 @@ export function AttendanceHistory() {
                                         {selected.records.map((record) => (
                                             <tr key={record.id}>
                                                 <td>{record.date}</td>
-                                                {showSlotColumn && (
-                                                    <td>{record.subjects?.name ?? "—"}</td>
-                                                )}
+                                                
                                                 <td>
                                                     <span
                                                         className={`status-pill ${getStatusClass(record.status)}`}

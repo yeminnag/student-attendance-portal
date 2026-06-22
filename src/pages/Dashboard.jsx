@@ -17,6 +17,15 @@ import {
     groupAttendanceBySubject,
 } from "@/utils/studentData.js";
 
+const SUBJECT_RATE_PREVIEW_COUNT = 4;
+
+function getLatestRecordDate(records) {
+    return (records ?? []).reduce(
+        (latest, record) => (record.date > latest ? record.date : latest),
+        ""
+    );
+}
+
 export function Dashboard() {
     const { studentId } = useAuth();
     const [loading, setLoading] = useState(true);
@@ -24,6 +33,7 @@ export function Dashboard() {
     const [summary, setSummary] = useState(null);
     const [todaySchedule, setTodaySchedule] = useState([]);
     const [subjectRates, setSubjectRates] = useState([]);
+    const [showAllSubjectRates, setShowAllSubjectRates] = useState(false);
 
     useEffect(() => {
         if (!studentId) return;
@@ -66,7 +76,8 @@ export function Dashboard() {
 
         setOverallRate(overall);
         setSummary(overallStats);
-        setSubjectRates(rates.sort((a, b) => a.subjectName.localeCompare(b.subjectName, "ja")));
+        setSubjectRates(rates);
+        setShowAllSubjectRates(false);
         setTodaySchedule(buildTodaySchedule(subjects, sessions, todayAttendance));
         setLoading(false);
     }
@@ -78,6 +89,13 @@ export function Dashboard() {
     const finishedClasses = todaySchedule.filter((item) =>
         ["ended", "skipped"].includes(item.state)
     );
+
+    const subjectRatesByRecent = [...subjectRates].sort((a, b) =>
+        getLatestRecordDate(b.records).localeCompare(getLatestRecordDate(a.records))
+    );
+    const hasMoreSubjectRates = subjectRatesByRecent.length > SUBJECT_RATE_PREVIEW_COUNT;
+    const previewSubjectRates = subjectRatesByRecent.slice(0, SUBJECT_RATE_PREVIEW_COUNT);
+    const extraSubjectRates = subjectRatesByRecent.slice(SUBJECT_RATE_PREVIEW_COUNT);
 
     if (loading) {
         return <div className="page-loading">読み込み中...</div>;
@@ -133,28 +151,65 @@ export function Dashboard() {
                 {subjectRates.length === 0 ? (
                     <p className="empty-msg">出席記録はまだありません。</p>
                 ) : (
-                    <div className="subject-rate-grid">
-                        {subjectRates.map((item) => (
-                            <article key={item.subjectId} className="subject-rate-card">
-                                <div className="subject-rate-head">
-                                    <strong>{item.subjectName}</strong>
-                                    <span>
-                                        {item.subjectType}
-                                        {item.subjectIds?.length > 1 &&
-                                            ` · ${item.subjectIds.length}限`}
-                                    </span>
+                    <>
+                        <div className="subject-rate-grid">
+                            {previewSubjectRates.map((item) => (
+                                <SubjectRateCard key={item.subjectId} item={item} />
+                            ))}
+                        </div>
+                        {hasMoreSubjectRates && (
+                            <>
+                                <div
+                                    className={
+                                        showAllSubjectRates
+                                            ? "subject-rate-more is-open"
+                                            : "subject-rate-more"
+                                    }
+                                >
+                                    <div className="subject-rate-more-inner">
+                                        <div className="subject-rate-grid">
+                                            {extraSubjectRates.map((item) => (
+                                                <SubjectRateCard key={item.subjectId} item={item} />
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="subject-rate-value">{item.rate}%</p>
-                                <p className="subject-rate-meta">
-                                    遅刻 {item.stats.late} · 欠席{" "}
-                                    {item.stats.effectiveAbsent}
-                                </p>
-                            </article>
-                        ))}
-                    </div>
+                                <button
+                                    type="button"
+                                    className={
+                                        showAllSubjectRates
+                                            ? "see-more-btn is-open"
+                                            : "see-more-btn"
+                                    }
+                                    onClick={() => setShowAllSubjectRates((prev) => !prev)}
+                                    aria-expanded={showAllSubjectRates}
+                                >
+                                    {showAllSubjectRates ? "閉じる" : "もっと見る"}
+                                </button>
+                            </>
+                        )}
+                    </>
                 )}
             </section>
         </div>
+    );
+}
+
+function SubjectRateCard({ item }) {
+    return (
+        <article className="subject-rate-card">
+            <div className="subject-rate-head">
+                <strong>{item.subjectName}</strong>
+                <span>
+                    {item.subjectType}
+                    {item.subjectIds?.length > 1 && ` · ${item.subjectIds.length}限`}
+                </span>
+            </div>
+            <p className="subject-rate-value">{item.rate}%</p>
+            <p className="subject-rate-meta">
+                遅刻 {item.stats.late} · 欠席 {item.stats.effectiveAbsent}
+            </p>
+        </article>
     );
 }
 
