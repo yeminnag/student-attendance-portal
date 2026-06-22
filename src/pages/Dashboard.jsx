@@ -200,12 +200,11 @@ function SubjectRateCard({ item }) {
         <article className="subject-rate-card">
             <div className="subject-rate-head">
                 <strong>{item.subjectName}</strong>
-                <span>
+                <small>
                     {item.subjectType}
-                    {item.subjectIds?.length > 1 && ` · ${item.subjectIds.length}限`}
-                </span>
+                </small>
+                <span className="subject-rate-value">{item.rate}%</span>
             </div>
-            <p className="subject-rate-value">{item.rate}%</p>
             <p className="subject-rate-meta">
                 遅刻 {item.stats.late} · 欠席 {item.stats.effectiveAbsent}
             </p>

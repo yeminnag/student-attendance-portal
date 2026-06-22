@@ -434,30 +434,27 @@ button {
 }
 
 .subject-rate-card {
-    padding: 14px;
+    padding: 10px;
     border: 1px solid var(--hover-color);
     border-radius: 10px;
 }
-
-.subject-rate-head {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.subject-rate-head span {
+.subject-rate-card strong{
     font-size: 11px;
+}
+.subject-rate-head{
+    display: grid;
+    grid-template-columns: 4fr 1fr 1fr;
+    align-items: center;
+}
+.subject-rate-head small{
+    font-size: 10px;
+}
+.subject-rate-head span {
     color: var(--text-secondary-color);
 }
 
-.subject-rate-value {
-    font-size: 28px;
-    font-weight: 500;
-    margin: 10px 0 6px;
-}
-
 .subject-rate-meta {
-    font-size: 12px;
+    font-size: 9px;
     color: var(--text-secondary-color);
 }
 
@@ -713,5 +710,10 @@ button {
     .schedule-item-meta {
         align-items: flex-start;
         text-align: left;
+    }
+
+    .subject-rate-card{
+        display: flex;
+        flex-direction: column;
     }
 }
