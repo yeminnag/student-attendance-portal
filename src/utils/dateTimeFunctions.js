@@ -3,6 +3,8 @@ export function getTodayWeekday() {
     return label.endsWith("曜日") ? label.slice(0, -1) : label;
 }
 
+export const WEEKDAYS = ["月曜", "火曜", "水曜", "木曜", "金曜", "土曜", "日曜"];
+
 export function getTodayDateString() {
     return new Date().toISOString().slice(0, 10);
 }

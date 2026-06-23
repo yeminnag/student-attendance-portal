@@ -20,6 +20,9 @@ export function Layout() {
                 <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
                     ホーム
                 </NavLink>
+                <NavLink to="/schedule" className={({ isActive }) => (isActive ? "active" : "")}>
+                    時間割
+                </NavLink>
                 <NavLink to="/attendance" className={({ isActive }) => (isActive ? "active" : "")}>
                     出席詳細
                 </NavLink>

@@ -1,6 +1,6 @@
 import { supabase } from "../../supabase.js";
 import { ATTENDANCE_STATUS } from "@/utils/attendanceFunctions.js";
-import { getTodayDateString, isSubjectScheduledToday } from "@/utils/dateTimeFunctions.js";
+import { getTodayDateString, isSubjectScheduledToday, WEEKDAYS, getTodayWeekday } from "@/utils/dateTimeFunctions.js";
 import { groupAttendanceByCourse } from "@/utils/subjectGroupFunctions.js";
 
 export async function fetchStudentProfile(userId) {
@@ -105,6 +105,83 @@ export function buildTodaySchedule(subjects, sessions, todayAttendance) {
             return { subject, session, ...classification };
         })
         .sort((a, b) => (a.subject.start_time ?? "").localeCompare(b.subject.start_time ?? ""));
+}
+
+function getTimeSlotKey(subject) {
+    return `${subject.start_time ?? ""}|${subject.end_time ?? ""}`;
+}
+
+export function buildWeeklyScheduleTable(subjects) {
+    const today = getTodayWeekday();
+    const activeDays = WEEKDAYS.filter((day) =>
+        (subjects ?? []).some((subject) => subject.days?.includes(day))
+    );
+
+    if (activeDays.length === 0) {
+        return { days: [], rows: [], listRows: [] };
+    }
+
+    const slotMap = new Map();
+
+    for (const subject of subjects ?? []) {
+        const key = getTimeSlotKey(subject);
+        if (!slotMap.has(key)) {
+            slotMap.set(key, {
+                startTime: subject.start_time,
+                endTime: subject.end_time,
+                byDay: Object.fromEntries(activeDays.map((day) => [day, []])),
+            });
+        }
+
+        for (const day of subject.days ?? []) {
+            if (activeDays.includes(day)) {
+                slotMap.get(key).byDay[day].push(subject);
+            }
+        }
+    }
+
+    const rows = [...slotMap.values()]
+        .sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""))
+        .map((slot) => ({
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            cells: activeDays.map((day) => ({
+                day,
+                isToday: day === today,
+                subjects: slot.byDay[day] ?? [],
+            })),
+        }));
+
+    const days = activeDays.map((day) => ({
+        day,
+        shortLabel: day.replace("曜", ""),
+        isToday: day === today,
+    }));
+
+    const listRows = [];
+    for (const subject of subjects ?? []) {
+        for (const day of subject.days ?? []) {
+            if (!activeDays.includes(day)) continue;
+            listRows.push({
+                id: `${subject.id}-${day}`,
+                day,
+                shortLabel: day.replace("曜", ""),
+                isToday: day === today,
+                startTime: subject.start_time,
+                endTime: subject.end_time,
+                subjectName: subject.name,
+                subjectType: subject.type,
+            });
+        }
+    }
+
+    listRows.sort((a, b) => {
+        const dayDiff = WEEKDAYS.indexOf(a.day) - WEEKDAYS.indexOf(b.day);
+        if (dayDiff !== 0) return dayDiff;
+        return (a.startTime ?? "").localeCompare(b.startTime ?? "");
+    });
+
+    return { days, rows, listRows };
 }
 
 export function groupAttendanceBySubject(attendanceRows) {
