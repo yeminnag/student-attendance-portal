@@ -109,10 +109,6 @@ export function AttendanceHistory() {
     return (
         <div className="attendance-page">
             <section className="panel">
-                <div className="panel-header">
-                    <h2>出席詳細</h2>
-                </div>
-
                 <div className="month-filter">
                     <label htmlFor="month-filter">表示月</label>
                     <select

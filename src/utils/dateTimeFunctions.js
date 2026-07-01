@@ -40,7 +40,7 @@ export function getCurrentMonthKey() {
 export function formatMonthLabel(monthKey) {
     if (!monthKey || monthKey === "all") return "すべて";
     const [year, month] = monthKey.split("-");
-    return `${year}年${Number(month)}月`;
+    return `${year} / ${Number(month)}`;
 }
 
 export function filterRecordsByMonth(records, monthKey) {

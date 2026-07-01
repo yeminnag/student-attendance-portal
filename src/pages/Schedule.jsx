@@ -44,9 +44,6 @@ export function Schedule() {
     return (
         <div className="schedule-page">
             <section className="panel">
-                <div className="panel-header">
-                    <h2>時間割</h2>
-                </div>
 
                 {listRows.length === 0 ? (
                     <p className="empty-msg">登録されている授業はありません。</p>

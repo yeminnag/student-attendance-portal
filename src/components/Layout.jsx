@@ -26,6 +26,9 @@ export function Layout() {
                 <NavLink to="/attendance" className={({ isActive }) => (isActive ? "active" : "")}>
                     出席詳細
                 </NavLink>
+                <NavLink to="/messages" className={({ isActive }) => (isActive ? "active" : "")}>
+                    メッセージ
+                </NavLink>
             </nav>
 
             <main className="page-content">

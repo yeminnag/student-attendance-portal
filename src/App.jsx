@@ -6,6 +6,7 @@ import { AttendanceHistory } from "@/pages/AttendanceHistory.jsx";
 import { Dashboard } from "@/pages/Dashboard.jsx";
 import { Login } from "@/pages/Login.jsx";
 import { Schedule } from "@/pages/Schedule.jsx";
+import { Messages } from "@/pages/Messages.jsx";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                                         <Route path="/" element={<Dashboard />} />
                                         <Route path="/schedule" element={<Schedule />} />
                                         <Route path="/attendance" element={<AttendanceHistory />} />
+                                        <Route path="/messages" element={<Messages />} />
                                         <Route path="*" element={<Navigate to="/" replace />} />
                                     </Route>
                                 </Routes>
