@@ -11,6 +11,12 @@ import {
     getNotificationPermission,
     isPushSupported,
 } from "@/utils/pushService.js";
+import {
+    fetchStudentNotifications,
+    formatNotificationDate,
+    getNotificationTypeLabel,
+    markNotificationsRead,
+} from "@/utils/notificationInbox.js";
 import { formatTimeRange, getTodayWeekday, isSubjectScheduledToday } from "@/utils/dateTimeFunctions.js";
 
 export function Notifications() {
@@ -19,6 +25,7 @@ export function Notifications() {
     const [permission, setPermission] = useState("default");
     const [enabled, setEnabled] = useState(false);
     const [todaySubjects, setTodaySubjects] = useState([]);
+    const [inbox, setInbox] = useState([]);
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -30,16 +37,19 @@ export function Notifications() {
         async function load() {
             setLoading(true);
 
-            const [{ data: enrollments }, { data: subscriptions }] = await Promise.all([
-                fetchStudentSubjects(studentId),
-                fetchPushSubscriptionStatus(studentId),
-            ]);
+            const [{ data: enrollments }, { data: subscriptions }, { data: notifications }] =
+                await Promise.all([
+                    fetchStudentSubjects(studentId),
+                    fetchPushSubscriptionStatus(studentId),
+                    fetchStudentNotifications(studentId),
+                ]);
 
             const subjects = getSubjectsFromEnrollment(enrollments).filter((subject) =>
                 isSubjectScheduledToday(subject, getTodayWeekday())
             );
             setTodaySubjects(subjects);
             setEnabled((subscriptions ?? []).length > 0);
+            setInbox(notifications ?? []);
             setPermission(await getNotificationPermission());
             setLoading(false);
         }
@@ -47,21 +57,39 @@ export function Notifications() {
         load();
     }, [studentId]);
 
+    useEffect(() => {
+        if (!studentId || loading) return;
+
+        async function markSeen() {
+            await markNotificationsRead(studentId);
+            setInbox((current) =>
+                current.map((item) => ({
+                    ...item,
+                    read_at: item.read_at ?? new Date().toISOString(),
+                }))
+            );
+        }
+
+        markSeen();
+    }, [studentId, loading]);
+
     const previewMessage = useMemo(() => {
         if (todaySubjects.length === 0) {
             return "本日は授業がありません。";
         }
 
-        const first = todaySubjects[0];
         return `本日は ${todaySubjects.length} 件の授業があります。`;
     }, [todaySubjects]);
 
-    async function handleEnable() {
+    async function handleToggle() {
         if (!studentId || busy) return;
         setBusy(true);
         setMessage("");
 
-        const { error } = await enableMorningNotifications(studentId);
+        const { error } = enabled
+            ? await disableMorningNotifications(studentId)
+            : await enableMorningNotifications(studentId);
+
         setBusy(false);
 
         if (error) {
@@ -69,26 +97,8 @@ export function Notifications() {
             return;
         }
 
-        setEnabled(true);
-        setPermission("granted");
-        setMessage("朝7時の授業通知を有効にしました。");
-    }
-
-    async function handleDisable() {
-        if (!studentId || busy) return;
-        setBusy(true);
-        setMessage("");
-
-        const { error } = await disableMorningNotifications(studentId);
-        setBusy(false);
-
-        if (error) {
-            setMessage(error.message);
-            return;
-        }
-
-        setEnabled(false);
-        setMessage("通知を停止しました。");
+        setEnabled(!enabled);
+        if (!enabled) setPermission("granted");
     }
 
     if (loading) {
@@ -97,59 +107,21 @@ export function Notifications() {
 
     return (
         <div className="notifications-page">
-            <div className="panel-header">
-                <div>
-                    <h2>通知</h2>
-                </div>
-            </div>
-
-            <section className="panel notification-status-card">
-                <div className="notification-status-row">
-                    <span className="notification-status-label">対応</span>
-                    <span className="notification-status-value">
-                        {supported ? "対応" : "非対応"}
-                    </span>
-                </div>
-                <div className="notification-status-row">
-                    <span className="notification-status-label">許可</span>
-                    <span className="notification-status-value">
-                        {permission === "granted"
-                            ? "許可済み"
-                            : permission === "denied"
-                              ? "拒否"
-                              : "未設定"}
-                    </span>
-                </div>
-                <div className="notification-status-row">
-                    <span className="notification-status-label">通知</span>
-                    <span
-                        className={`notification-status-value${enabled ? " on" : ""}`}
-                    >
-                        {enabled ? "オン" : "オフ"}
-                    </span>
-                </div>
-
-                {supported && permission !== "denied" && !enabled && (
+            <section className="panel notification-toggle-panel">
+                <label className="notification-switch-row">
+                    <span className="notification-switch-label">通知</span>
                     <button
                         type="button"
-                        className="notification-enable-btn"
-                        onClick={handleEnable}
-                        disabled={busy}
+                        role="switch"
+                        aria-checked={enabled}
+                        aria-label="朝7時の授業通知"
+                        className={`notification-switch${enabled ? " on" : ""}`}
+                        onClick={handleToggle}
+                        disabled={busy || !supported || permission === "denied"}
                     >
-                        通知を有効にする
+                        <span className="notification-switch-thumb" />
                     </button>
-                )}
-
-                {enabled && (
-                    <button
-                        type="button"
-                        className="notification-disable-btn"
-                        onClick={handleDisable}
-                        disabled={busy}
-                    >
-                        通知を停止
-                    </button>
-                )}
+                </label>
 
                 {permission === "denied" && (
                     <p className="notification-hint">
@@ -157,16 +129,52 @@ export function Notifications() {
                     </p>
                 )}
 
+                {!supported && (
+                    <p className="notification-hint">この端末は通知に対応していません。</p>
+                )}
+
                 {message && <p className="notification-message">{message}</p>}
             </section>
 
             <section className="panel">
+                <h3 className="notification-section-title">お知らせ</h3>
+                {inbox.length === 0 ? (
+                    <p className="empty-msg">お知らせはまだありません。</p>
+                ) : (
+                    <ul className="notification-inbox-list">
+                        {inbox.map((item) => (
+                            <li
+                                key={item.id}
+                                className={`notification-inbox-item${item.read_at ? "" : " unread"}`}
+                            >
+                                <div className="notification-inbox-head">
+                                    <span className="notification-inbox-type">
+                                        {getNotificationTypeLabel(item.notification_type)}
+                                    </span>
+                                    <span className="notification-inbox-date">
+                                        {formatNotificationDate(item.created_at)}
+                                    </span>
+                                </div>
+                                <strong className="notification-inbox-title">{item.title}</strong>
+                                <p className="notification-inbox-body">{item.body}</p>
+                                {item.sender_name && (
+                                    <span className="notification-inbox-sender">
+                                        {item.sender_name}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
+
+            <section className="panel">
                 <h3 className="notification-section-title">
-                    本日の授業 
+                    本日の授業
                     <span className="notification-preview">{previewMessage}</span>
                 </h3>
                 {todaySubjects.length === 0 ? (
-                    <p className="empty-msg"> 本日は授業がありません。</p>
+                    <p className="empty-msg">本日は授業がありません。</p>
                 ) : (
                     <ul className="notification-class-list">
                         {todaySubjects.map((subject) => (
@@ -177,9 +185,7 @@ export function Notifications() {
                         ))}
                     </ul>
                 )}
-                
             </section>
-
         </div>
     );
 }

@@ -236,6 +236,38 @@ button {
     flex-shrink: 0;
 }
 
+.app-nav-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-unread-dot {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e53935;
+    border: 1.5px solid var(--bg-color);
+}
+
+.nav-unread-dot-label {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: #e53935;
+    vertical-align: middle;
+}
+
+.app-nav-bottom .nav-unread-dot-label {
+    display: none;
+}
+
 .app-nav-icon svg {
     width: 100%;
     height: 100%;
@@ -1329,54 +1361,58 @@ button {
     gap: 14px;
 }
 
-.notification-status-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.notification-toggle-panel {
+    padding: 12px 14px;
 }
 
-.notification-status-row {
+.notification-switch-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
+}
+
+.notification-switch-label {
     font-size: 13px;
-}
-
-.notification-status-label {
-    color: var(--text-secondary-color);
-}
-
-.notification-status-value.on {
-    color: var(--accent-hover-color);
-    font-weight: 500;
-}
-
-.notification-enable-btn,
-.notification-disable-btn {
-    width: 100%;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.notification-enable-btn {
-    background: var(--accent-color);
     color: var(--text-color);
 }
 
-.notification-disable-btn {
-    background: transparent;
-    color: var(--text-secondary-color);
-    border: 1px solid var(--hover-color);
+.notification-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border: none;
+    border-radius: 11px;
+    background: var(--hover-color);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
 }
 
-.notification-enable-btn:disabled,
-.notification-disable-btn:disabled {
-    opacity: 0.6;
+.notification-switch.on {
+    background: var(--accent-color);
+}
+
+.notification-switch:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
+}
+
+.notification-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.notification-switch.on .notification-switch-thumb {
+    transform: translateX(18px);
 }
 
 .notification-hint,
@@ -1386,6 +1422,12 @@ button {
     color: var(--text-secondary-color);
     line-height: 1.5;
     margin-left: 10px;
+}
+
+.notification-hint,
+.notification-message {
+    margin-top: 8px;
+    margin-left: 0;
 }
 
 .notification-message {
@@ -1419,6 +1461,60 @@ button {
 .notification-class-list span {
     color: var(--text-secondary-color);
     white-space: nowrap;
+}
+
+.notification-inbox-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-inbox-item {
+    padding: 10px 12px;
+    background: var(--hover-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.notification-inbox-item.unread {
+    border-left: 3px solid var(--accent-color);
+}
+
+.notification-inbox-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.notification-inbox-type {
+    color: var(--accent-hover-color);
+}
+
+.notification-inbox-date {
+    color: var(--text-secondary-color);
+    white-space: nowrap;
+}
+
+.notification-inbox-title {
+    font-size: 13px;
+}
+
+.notification-inbox-body {
+    font-size: 12px;
+    color: var(--text-secondary-color);
+    line-height: 1.5;
+    white-space: pre-line;
+    margin: 0;
+}
+
+.notification-inbox-sender {
+    font-size: 11px;
+    color: var(--text-secondary-color);
 }
 
 .notification-info-list {

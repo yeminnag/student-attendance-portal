@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications.js";
 
 const navItems = [
     {
@@ -51,7 +52,31 @@ const navItems = [
 ];
 
 export function Layout() {
-    const { student, signOut } = useAuth();
+    const { student, studentId, signOut } = useAuth();
+    const { hasUnread } = useUnreadNotifications(studentId);
+    const location = useLocation();
+
+    function renderNavItem(item, keyPrefix) {
+        const showDot = item.to === "/notifications" && hasUnread && location.pathname !== "/notifications";
+
+        return (
+            <NavLink
+                key={`${keyPrefix}-${item.to}`}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => (isActive ? "active" : "")}
+            >
+                <span className="app-nav-icon-wrap">
+                    <span className="app-nav-icon">{item.icon}</span>
+                    {showDot && <span className="nav-unread-dot" aria-hidden="true" />}
+                </span>
+                <span className="app-nav-label">
+                    {item.label}
+                    {showDot && <span className="nav-unread-dot-label" aria-hidden="true" />}
+                </span>
+            </NavLink>
+        );
+    }
 
     return (
         <div className="app-shell">
@@ -66,17 +91,7 @@ export function Layout() {
             </header>
 
             <nav className="app-nav app-nav-top" aria-label="メインメニュー">
-                {navItems.map((item) => (
-                    <NavLink
-                        key={item.to}
-                        to={item.to}
-                        end={item.end}
-                        className={({ isActive }) => (isActive ? "active" : "")}
-                    >
-                        <span className="app-nav-icon">{item.icon}</span>
-                        <span className="app-nav-label">{item.label}</span>
-                    </NavLink>
-                ))}
+                {navItems.map((item) => renderNavItem(item, "top"))}
             </nav>
 
             <main className="page-content">
@@ -84,17 +99,7 @@ export function Layout() {
             </main>
 
             <nav className="app-nav app-nav-bottom" aria-label="モバイルメニュー">
-                {navItems.map((item) => (
-                    <NavLink
-                        key={`mobile-${item.to}`}
-                        to={item.to}
-                        end={item.end}
-                        className={({ isActive }) => (isActive ? "active" : "")}
-                    >
-                        <span className="app-nav-icon">{item.icon}</span>
-                        <span className="app-nav-label">{item.label}</span>
-                    </NavLink>
-                ))}
+                {navItems.map((item) => renderNavItem(item, "mobile"))}
             </nav>
         </div>
     );

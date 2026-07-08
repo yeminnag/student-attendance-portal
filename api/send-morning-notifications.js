@@ -186,6 +186,13 @@ export default async function handler(req, res) {
                 },
                 { onConflict: "student_id,notification_type,sent_date" }
             );
+            await supabase.from("student_notifications").insert({
+                student_id: studentId,
+                notification_type: NOTIFICATION_TYPE,
+                title: message.title,
+                body: message.body,
+                sender_name: "システム",
+            });
             sent += 1;
         }
     }

@@ -7,12 +7,19 @@ self.addEventListener("push", (event) => {
     }
 
     event.waitUntil(
-        self.registration.showNotification(payload.title, {
-            body: payload.body,
-            icon: "/favicon.png",
-            badge: "/favicon.png",
-            data: { url: payload.url ?? "/" },
-        })
+        Promise.all([
+            self.registration.showNotification(payload.title, {
+                body: payload.body,
+                icon: "/favicon.png",
+                badge: "/favicon.png",
+                data: { url: payload.url ?? "/" },
+            }),
+            self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+                for (const client of clients) {
+                    client.postMessage({ type: "NOTIFICATION_RECEIVED", payload });
+                }
+            }),
+        ])
     );
 });
 
