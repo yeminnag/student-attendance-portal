@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/send-morning-notifications",
+      "schedule": "0 22 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
