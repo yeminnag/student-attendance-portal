@@ -1,6 +1,17 @@
 import { supabase } from "../../supabase.js";
 
+const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUserId(value) {
+    return typeof value === "string" && UUID_RE.test(value);
+}
+
 export async function fetchMessagesWithPartner(userId, partnerId) {
+    if (!isValidUserId(userId) || !isValidUserId(partnerId)) {
+        return { data: [], error: new Error("Invalid conversation participant") };
+    }
+
     return supabase
         .from("messages")
         .select("id, sender_id, recipient_id, body, read_at, created_at")
@@ -147,7 +158,12 @@ export function subscribeToMessages(userId, onChange) {
         .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "messages" },
-            onChange
+            (payload) => {
+                const row = payload.new ?? payload.old;
+                if (!row) return;
+                if (row.sender_id !== userId && row.recipient_id !== userId) return;
+                onChange(payload);
+            }
         )
         .subscribe();
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../supabase.js";
 import { fetchStudentProfile } from "@/utils/studentData.js";
 import { studentNumberToAuthEmail } from "@/utils/studentAuth.js";
@@ -53,7 +53,8 @@ export function AuthProvider({ children }) {
 
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "TOKEN_REFRESHED") return;
             setLoading(true);
             loadSession(session?.user ?? null);
         });
@@ -61,32 +62,35 @@ export function AuthProvider({ children }) {
         return () => subscription.unsubscribe();
     }, [loadSession]);
 
-    async function signIn(studentNumber, password) {
+    const signIn = useCallback(async (studentNumber, password) => {
         const { error } = await supabase.auth.signInWithPassword({
             email: studentNumberToAuthEmail(studentNumber),
             password,
         });
         if (error) throw error;
-    }
+    }, []);
 
-    async function signOut() {
+    const signOut = useCallback(async () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
-    }
+    }, []);
+
+    const contextValue = useMemo(
+        () => ({
+            user,
+            profile,
+            student,
+            studentId: profile?.student_id ?? null,
+            profileError,
+            loading,
+            signIn,
+            signOut,
+        }),
+        [user, profile, student, profileError, loading, signIn, signOut]
+    );
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                profile,
-                student,
-                studentId: profile?.student_id ?? null,
-                profileError,
-                loading,
-                signIn,
-                signOut,
-            }}
-        >
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

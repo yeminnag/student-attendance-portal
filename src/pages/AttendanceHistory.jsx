@@ -4,7 +4,6 @@ import {
     getAttendanceRate,
     getStatusClass,
     summarizeAttendanceRecords,
-    LATES_PER_ABSENT,
 } from "@/utils/attendanceFunctions.js";
 import {
     filterRecordsByMonth,
@@ -99,7 +98,6 @@ export function AttendanceHistory() {
     }
 
     const selected = subjects.find((item) => item.subjectId === selectedId);
-    const showSlotColumn = (selected?.subjectIds?.length ?? 0) > 1;
     const monthLabel = formatMonthLabel(selectedMonth);
 
     if (loading) {

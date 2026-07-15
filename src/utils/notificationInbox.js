@@ -60,5 +60,6 @@ export function formatNotificationDate(isoString) {
 export function getNotificationTypeLabel(type) {
     if (type === "risk_alert") return "出席率";
     if (type === "morning_schedule") return "本日の授業";
+    if (type === "today_schedule") return "本日の授業";
     return "お知らせ";
 }

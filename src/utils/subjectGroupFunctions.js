@@ -7,33 +7,6 @@ export function getSubjectCourseKey(subject) {
     return subject.name?.trim() ?? "";
 }
 
-export function groupEnrollmentByCourse(enrollmentRows) {
-    const groups = new Map();
-
-    for (const row of enrollmentRows ?? []) {
-        const subject = row.subjects ?? row;
-        const courseKey = getSubjectCourseKey(subject) || row.subject_id || subject.id;
-        const courseName = getSubjectCourseKey(subject) || subject.name || "不明";
-
-        if (!groups.has(courseKey)) {
-            groups.set(courseKey, {
-                courseKey,
-                courseName,
-                subjectType: subject.type ?? "",
-                subjectIds: [],
-                slotNames: [],
-            });
-        }
-
-        const group = groups.get(courseKey);
-        const subjectId = row.subject_id ?? subject.id;
-        group.subjectIds.push(subjectId);
-        group.slotNames.push(subject.name ?? "");
-    }
-
-    return [...groups.values()];
-}
-
 export function groupAttendanceByCourse(attendanceRows) {
     const groups = {};
 
@@ -60,9 +33,4 @@ export function groupAttendanceByCourse(attendanceRows) {
         ...group,
         subjectIds: [...group.subjectIds],
     }));
-}
-
-export function filterAttendanceBySubjectIds(attendanceRows, subjectIds) {
-    const idSet = new Set(subjectIds);
-    return (attendanceRows ?? []).filter((row) => idSet.has(row.subject_id));
 }

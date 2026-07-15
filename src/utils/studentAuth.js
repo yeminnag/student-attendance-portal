@@ -15,7 +15,3 @@ export function validateStudentNumber(value) {
 export function studentNumberToAuthEmail(studentNumber) {
     return `${normalizeStudentNumber(studentNumber)}${STUDENT_EMAIL_DOMAIN}`;
 }
-
-export function isStudentAuthEmail(email) {
-    return email?.toLowerCase().endsWith(STUDENT_EMAIL_DOMAIN);
-}

@@ -75,10 +75,9 @@ export function Messages() {
         async function loadContacts() {
             setLoading(true);
             const { data, error } = await fetchTeachersForStudentSubjects(studentId);
-            if (error) {
-                console.error("Failed to load teachers:", error);
+            if (!error) {
+                setContacts(data ?? []);
             }
-            setContacts(data ?? []);
 
             const { data: recentMessages } = await fetchRecentMessages(user.id);
             setMessages(recentMessages ?? []);

@@ -15,7 +15,6 @@ import {
     fetchStudentNotifications,
     formatNotificationDate,
     getNotificationTypeLabel,
-    markNotificationsRead,
 } from "@/utils/notificationInbox.js";
 import { formatTimeRange, getTodayWeekday, isSubjectScheduledToday } from "@/utils/dateTimeFunctions.js";
 
@@ -59,27 +58,44 @@ export function Notifications() {
 
     useEffect(() => {
         if (!studentId || loading) return;
-
-        async function markSeen() {
-            await markNotificationsRead(studentId);
-            setInbox((current) =>
-                current.map((item) => ({
-                    ...item,
-                    read_at: item.read_at ?? new Date().toISOString(),
-                }))
-            );
-        }
-
-        markSeen();
+        setInbox((current) =>
+            current.map((item) => ({
+                ...item,
+                read_at: item.read_at ?? new Date().toISOString(),
+            }))
+        );
     }, [studentId, loading]);
 
-    const previewMessage = useMemo(() => {
-        if (todaySubjects.length === 0) {
-            return "本日は授業がありません。";
+    const feedItems = useMemo(() => {
+        const items = [];
+
+        if (todaySubjects.length > 0) {
+            items.push({
+                id: "today-schedule",
+                notification_type: "today_schedule",
+                title:
+                    todaySubjects.length === 1
+                        ? "本日は1件の授業があります"
+                        : `本日は${todaySubjects.length}件の授業があります`,
+                body: todaySubjects
+                    .map(
+                        (subject) =>
+                            `${subject.name}（${formatTimeRange(subject.start_time, subject.end_time)}）`
+                    )
+                    .join("\n"),
+                sender_name: null,
+                created_at: new Date().toISOString(),
+                read_at: new Date().toISOString(),
+                isStatic: true,
+            });
         }
 
-        return `本日は ${todaySubjects.length} 件の授業があります。`;
-    }, [todaySubjects]);
+        for (const item of inbox) {
+            items.push(item);
+        }
+
+        return items;
+    }, [todaySubjects, inbox]);
 
     async function handleToggle() {
         if (!studentId || busy) return;
@@ -136,13 +152,12 @@ export function Notifications() {
                 {message && <p className="notification-message">{message}</p>}
             </section>
 
-            <section className="panel">
-                <h3 className="notification-section-title">お知らせ</h3>
-                {inbox.length === 0 ? (
+            <section className="panel notification-feed-panel">
+                {feedItems.length === 0 ? (
                     <p className="empty-msg">お知らせはまだありません。</p>
                 ) : (
                     <ul className="notification-inbox-list">
-                        {inbox.map((item) => (
+                        {feedItems.map((item) => (
                             <li
                                 key={item.id}
                                 className={`notification-inbox-item${item.read_at ? "" : " unread"}`}
@@ -151,9 +166,11 @@ export function Notifications() {
                                     <span className="notification-inbox-type">
                                         {getNotificationTypeLabel(item.notification_type)}
                                     </span>
-                                    <span className="notification-inbox-date">
-                                        {formatNotificationDate(item.created_at)}
-                                    </span>
+                                    {!item.isStatic && (
+                                        <span className="notification-inbox-date">
+                                            {formatNotificationDate(item.created_at)}
+                                        </span>
+                                    )}
                                 </div>
                                 <strong className="notification-inbox-title">{item.title}</strong>
                                 <p className="notification-inbox-body">{item.body}</p>
@@ -162,25 +179,6 @@ export function Notifications() {
                                         {item.sender_name}
                                     </span>
                                 )}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </section>
-
-            <section className="panel">
-                <h3 className="notification-section-title">
-                    本日の授業
-                    <span className="notification-preview">{previewMessage}</span>
-                </h3>
-                {todaySubjects.length === 0 ? (
-                    <p className="empty-msg">本日は授業がありません。</p>
-                ) : (
-                    <ul className="notification-class-list">
-                        {todaySubjects.map((subject) => (
-                            <li key={subject.id}>
-                                <strong>{subject.name}</strong>
-                                <span>{formatTimeRange(subject.start_time, subject.end_time)}</span>
                             </li>
                         ))}
                     </ul>

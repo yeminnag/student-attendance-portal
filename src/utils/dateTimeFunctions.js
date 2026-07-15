@@ -1,12 +1,15 @@
 export function getTodayWeekday() {
-    const label = new Date().toLocaleDateString("ja-JP", { weekday: "long" });
+    const label = new Date().toLocaleDateString("ja-JP", {
+        weekday: "long",
+        timeZone: "Asia/Tokyo",
+    });
     return label.endsWith("曜日") ? label.slice(0, -1) : label;
 }
 
 export const WEEKDAYS = ["月曜", "火曜", "水曜", "木曜", "金曜", "土曜", "日曜"];
 
 export function getTodayDateString() {
-    return new Date().toISOString().slice(0, 10);
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
 }
 
 export function formatTodayLabel() {
@@ -17,14 +20,6 @@ export function formatTimeRange(startTime, endTime) {
     const start = startTime?.slice(0, 5) ?? "—";
     const end = endTime?.slice(0, 5) ?? "—";
     return `${start} - ${end}`;
-}
-
-export function parseTimeOnDate(baseDate, timeStr) {
-    if (!timeStr) return null;
-    const base = new Date(baseDate);
-    const [hours, minutes, seconds = 0] = timeStr.split(":").map(Number);
-    base.setHours(hours, minutes, seconds, 0);
-    return base;
 }
 
 export function isSubjectScheduledToday(subject, weekday = getTodayWeekday()) {

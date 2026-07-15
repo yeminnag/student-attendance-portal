@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext.jsx";
 import {
     getAttendanceRate,
     summarizeAttendanceRecords,
-    LATES_PER_ABSENT,
 } from "@/utils/attendanceFunctions.js";
 import { formatTodayLabel, formatTimeRange } from "@/utils/dateTimeFunctions.js";
 import {
