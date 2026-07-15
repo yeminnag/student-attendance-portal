@@ -10,8 +10,8 @@ self.addEventListener("push", (event) => {
         Promise.all([
             self.registration.showNotification(payload.title, {
                 body: payload.body,
-                icon: "/favicon.png",
-                badge: "/favicon.png",
+            icon: "/favicon.png?v=4",
+            badge: "/favicon.png?v=4",
                 data: { url: payload.url ?? "/" },
             }),
             self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
