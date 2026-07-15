@@ -2,7 +2,7 @@
 
 読売理工医療福祉専門学校の学生向け出席確認アプリです。教員用出席管理システムと**同じ Supabase データベース**を共有し、学生が自分の出席率・今日の授業・月別の出席履歴を閲覧できます。
 
-**Live:** https://student-attendance-portal-mu.vercel.app/
+**Live:** https://student-attendance-portal-six.vercel.app/
 
 ## 機能
 
